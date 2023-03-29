@@ -14,7 +14,7 @@ function download_file() {
     link.download = fileName;
     link.click();
 
-    add_log("路線資料下載完成","blue");
+    add_log("路線資料下載完成","#aacdee");
 }
 
 //打包並回傳資料
