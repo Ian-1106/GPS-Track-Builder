@@ -14,7 +14,7 @@ function download_file() {
     link.download = fileName;
     link.click();
 
-    add_log("路線資料下載完成","#aacdee");
+    add_log("路線資料下載完成","blue");
 }
 
 //打包並回傳資料
@@ -27,7 +27,14 @@ function data_package(){
     let data_info = new Uint8Array(new ArrayBuffer(16));  //檔案資訊
     data_info[0] = new Date().getMonth()+1  //月
     data_info[1] = new Date().getDate();    //日
-    data_info[2] = points_on_edges_of_graphics_to_output.length;    //資料長度
+    if(points_on_edges_of_graphics_to_output.length < 256){ //資料長度
+        data_info[2] = 0;
+        data_info[3] = points_on_edges_of_graphics_to_output.length;
+    }else{
+        data_info[2] = parseInt(points_on_edges_of_graphics_to_output.length / 256);
+        data_info[3] = parseInt(points_on_edges_of_graphics_to_output.length % 256);
+    }
+
     data_list.push(data_info);
 
     for(var i=0; i<points_on_edges_of_graphics_to_output.length; i++){
@@ -69,6 +76,13 @@ function data_package(){
 
         console.log(points_on_edges_of_graphics_to_output[i]);
     }
+
+    let arr = new Uint8Array(new ArrayBuffer(16));
+    for(var i = 0; i < 16; i++){
+        arr[i] = 255;
+    }
+    data_list.push(arr);
+
     return data_list;
 }
 

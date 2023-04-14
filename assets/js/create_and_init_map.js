@@ -96,7 +96,7 @@ function onLocationFound(e) {
 //無法取得使用者座標時觸發
 function onLocationError(e) {
     alert("無法取得使用者座標");
-    add_log("無法取得使用者座標" , "#ff4d4d");
+    add_log("無法取得使用者座標" , "red");
 }
 
 //定位使用者位置

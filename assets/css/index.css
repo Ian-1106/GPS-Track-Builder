@@ -63,7 +63,7 @@ select{
 }
 
 .dowload_btn{
-    width:2%;
+    width:3%;
 	margin-left:1.2%;
 	border-radius:5%;
 }
@@ -76,7 +76,7 @@ select{
     width:99%;
 	margin-top:0.5%;
 	margin-left:1%;
-    background-color: #1b4d7e;
+    background-color: #123456;
 	color: #FFFFFF;
     overflow-y: overlay;
 }
