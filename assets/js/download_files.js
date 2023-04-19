@@ -37,6 +37,8 @@ function data_package(){
 
     data_list.push(data_info);
 
+
+    console.log("修改時間:20230416 1357");
     for(var i=0; i<points_on_edges_of_graphics_to_output.length; i++){
         var data_ep = {
             'nsew_area':get_nsew_area(points_on_edges_of_graphics_to_output[i][2].lat, points_on_edges_of_graphics_to_output[i][2].lon),
@@ -67,10 +69,10 @@ function data_package(){
         arr[9] = parseInt(data_ep.next_address / 256);
         arr[10] = parseInt(data_ep.next_address % 256);
         arr[11] = parseInt(data_ep.cursor / 2);
-        arr[12] = parseInt(data_ep.lat_differ / 256);
-        arr[13] = parseInt(data_ep.lat_differ % 256);
-        arr[14] = parseInt(data_ep.lon_differ / 256);
-        arr[15] = parseInt(data_ep.lon_differ % 256);
+        arr[12] = data_ep.lat_differ[0];
+        arr[13] = data_ep.lat_differ[1];
+        arr[14] = data_ep.lon_differ[0];
+        arr[15] = data_ep.lon_differ[1];
         
         data_list.push(arr);
 
@@ -169,5 +171,16 @@ function get_point_cursor(x, y){
 }
 
 function get_point_differ(value1, value2){
-    return value1 - value2;
-}
+    var diff = value2 - value1;
+  
+    if(diff < 0){
+        diff = 0xFFFF + diff + 1; // 將差轉換為二補數表示法
+    }
+  
+    var data = new Uint8Array(new ArrayBuffer(2));
+  
+    data[0] = diff & 0xFF;
+    data[1] = (diff >> 8) & 0xFF;
+  
+    return data;
+  }
