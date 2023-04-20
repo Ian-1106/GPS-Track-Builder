@@ -34,9 +34,9 @@ function create_new_list_by_distance(){
         var count = 1;
         for(var i=0; i<scan_result.length; i++){
             var tmp = scan_result[i];
-            L.marker(tmp , {
+            /*L.marker(tmp , {
                 title: "("+tmp.lat+","+tmp.lng+")",
-            }).addTo(map);
+            }).addTo(map);*/
             if(i % 2 == 0){
                 var tmp = new Array();      //tmp: [id, sp, ep, address]
                 let sp ={
@@ -97,6 +97,10 @@ function create_new_list_by_distance(){
         }
 
         points_on_edges_of_graphics_to_output = data_to_mcu;
+        data_to_file = data_package();  //打包資料
+
+
+
         add_log("路徑規劃完成","#b1c9e2");
     }
     else alert("未輸入間隔距離");
@@ -408,4 +412,77 @@ function sort_lng(list){
 //繪製路線
 function draw_path(list){
     L.polyline(list,{color: 'blue'}).addTo(map);
+}
+
+//打包並回傳資料
+function data_package(){
+    let data_list = new Array();    //打包好的bin檔案
+    bubblesort();                   //依EP.lat進行排序
+    init_next_point_address();      //設定當前address
+    get_next_point_after_sort();    //設定next address 
+
+    let data_info = new Uint8Array(new ArrayBuffer(16));  //檔案資訊
+    data_info[0] = new Date().getMonth()+1  //月
+    data_info[1] = new Date().getDate();    //日
+    if(points_on_edges_of_graphics_to_output.length < 256){ //資料長度
+        data_info[2] = 0;
+        data_info[3] = points_on_edges_of_graphics_to_output.length;
+    }else{
+        data_info[2] = parseInt(points_on_edges_of_graphics_to_output.length / 256);
+        data_info[3] = parseInt(points_on_edges_of_graphics_to_output.length % 256);
+    }
+
+    data_list.push(data_info);
+
+
+    for(var i=0; i<points_on_edges_of_graphics_to_output.length; i++){
+        var data_ep = {
+            'nsew_area':get_nsew_area(points_on_edges_of_graphics_to_output[i][2].lat, points_on_edges_of_graphics_to_output[i][2].lon),
+            'lat':parseInt(points_on_edges_of_graphics_to_output[i][2].lat * 1000000),  //結束點緯度
+            'lon':parseInt(points_on_edges_of_graphics_to_output[i][2].lon * 1000000),  //結束點經度
+            'cursor':parseInt(get_point_cursor(points_on_edges_of_graphics_to_output[i][1], points_on_edges_of_graphics_to_output[i][2]) / 2),
+            'next_address':points_on_edges_of_graphics_to_output[i][4],
+            'lat_differ':get_point_differ(parseInt(points_on_edges_of_graphics_to_output[i][1].lat * 1000000), parseInt(points_on_edges_of_graphics_to_output[i][2].lat * 1000000)),
+            'lon_differ':get_point_differ(parseInt(points_on_edges_of_graphics_to_output[i][1].lon * 1000000), parseInt(points_on_edges_of_graphics_to_output[i][2].lon * 1000000)),
+        }; 
+        
+        var tmp = {lat: data_ep.lat / 1000000, lng: data_ep.lon / 1000000};
+        L.marker(tmp , {
+            title: "Address:"+(i-1)+" , Location:("+tmp.lat+","+tmp.lng+")",
+        }).addTo(map);
+
+        let arr = new Uint8Array(new ArrayBuffer(16));
+        arr[0] = data_ep.nsew_area;
+        arr[1] = (data_ep.lat>>24) & 0xFF;
+        arr[2] = (data_ep.lat>>16) & 0xFF;
+        arr[3] = (data_ep.lat>>8) & 0xFF;
+        arr[4] = (data_ep.lat) & 0xFF;
+        arr[5] = (data_ep.lon>>24) & 0xFF;
+        arr[6] = (data_ep.lon>>16) & 0xFF;
+        arr[7] = (data_ep.lon>>8) & 0xFF;
+        arr[8] = (data_ep.lon) & 0xFF;
+        arr[9] = (parseInt(data_ep.next_address)>>8) & 0xFF;
+        arr[10] = (parseInt(data_ep.next_address)) & 0xFF;
+        arr[11] = parseInt(data_ep.cursor / 2);
+        arr[12] = data_ep.lat_differ[0];
+        arr[13] = data_ep.lat_differ[1];
+        arr[14] = data_ep.lon_differ[0];
+        arr[15] = data_ep.lon_differ[1];
+
+        if(arr[10] == 255){
+            arr[9] = 255;
+        }
+        
+        data_list.push(arr);
+
+        console.log(points_on_edges_of_graphics_to_output[i]);
+    }
+
+    let arr = new Uint8Array(new ArrayBuffer(16));
+    for(var i = 0; i < 16; i++){
+        arr[i] = 255;
+    }
+    data_list.push(arr);
+
+    return data_list;
 }
