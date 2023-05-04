@@ -1,4 +1,4 @@
-function create_new_list_by_distance(){
+function shape_path_process(){
     let distance = document.querySelector('#interval_of_distance_set_by_user').value;   //使用者輸入的間隔距離
     let dir = document.querySelector('#direction').value;  //取得路經規劃方向
     if(distance != ""){ //檢查使用者是否有輸入間隔距離
@@ -16,7 +16,7 @@ function create_new_list_by_distance(){
         add_log("間隔距離設定為" + distance);
         add_log("路徑規劃方向: " + dir);
 
-        let scan_dir = getScanDirection(dir);   //取得掃描線方向(垂直或水平)
+		let scan_dir = getScanDirection(dir);   //取得掃描線方向(垂直或水平)
         let scan_list = new Array();
         let scan_result = new Array();
         if(scan_dir == "vertical"){
@@ -29,14 +29,14 @@ function create_new_list_by_distance(){
         sort_list(scan_result, dir);
         add_log("掃描線建立成功");
         add_log("掃描結果:建立" + scan_result.length + "個座標點","#b1c9e2");
-        
-        var data_to_mcu = new Array();
+
+		var data_to_mcu = new Array();
         var count = 1;
         for(var i=0; i<scan_result.length; i++){
             var tmp = scan_result[i];
-            /*L.marker(tmp , {
-                title: "("+tmp.lat+","+tmp.lng+")",
-            }).addTo(map);*/
+            L.marker(tmp , {
+                title: "id:"+i+" , ("+parseInt(tmp.lat*1000000)/1000000+","+parseInt(tmp.lng*1000000)/1000000+")",
+            }).addTo(map);
             if(i % 2 == 0){
                 var tmp = new Array();      //tmp: [id, sp, ep, address]
                 let sp ={
@@ -96,12 +96,15 @@ function create_new_list_by_distance(){
             }
         }
 
-        points_on_edges_of_graphics_to_output = data_to_mcu;
-        data_to_file = data_package();  //打包資料
 
-
-
-        add_log("路徑規劃完成","#b1c9e2");
+		handle_shape_path_lines(data_to_mcu);
+		shape_path_lines_sort_by_epLat(); //依EP.lat進行排序
+        shape_path_set_next_address();
+        shape_path_sep_cursor();
+        shape_path_sep_differ();
+        shape_path_lines_nsew_area();
+        data_to_file = shape_path_data_to_file();
+		//console.log(shape_path_lines);
     }
     else alert("未輸入間隔距離");
 }
@@ -111,19 +114,19 @@ function IsPtInPoly() {
 	var iSum = 0,
 		iCount;
 	var dLon1, dLon2, dLat1, dLat2, dLon;
-	if (points_marker_by_user.length < 3) return false;
-	iCount = points_marker_by_user.length;
+	if (shape_path_points.length < 3) return false;
+	iCount = shape_path_points.length;
 	for (var i = 0; i < iCount; i++) {
 		if (i == iCount - 1) {
-			dLon1 = points_marker_by_user[i].lng;
-			dLat1 = points_marker_by_user[i].lat;
-			dLon2 = points_marker_by_user[0].lng;
-			dLat2 = points_marker_by_user[0].lat;
+			dLon1 = shape_path_points[i].lng;
+			dLat1 = shape_path_points[i].lat;
+			dLon2 = shape_path_points[0].lng;
+			dLat2 = shape_path_points[0].lat;
 		} else {
-			dLon1 = points_marker_by_user[i].lng;
-			dLat1 = points_marker_by_user[i].lat;
-			dLon2 = points_marker_by_user[i + 1].lng;
-			dLat2 = points_marker_by_user[i + 1].lat;
+			dLon1 = shape_path_points[i].lng;
+			dLat1 = shape_path_points[i].lat;
+			dLon2 = shape_path_points[i + 1].lng;
+			dLat2 = shape_path_points[i + 1].lat;
 		}
 		//以下語句判斷A點是否在邊的兩端點的水平平行線之間，在則可能有交點，開始判斷交點是否在左射線上
 		if (((user_location.lat >= dLat1) && (user_location.lat < dLat2)) || ((user_location.lat >= dLat2) && (user_location.lat < dLat1))) {
@@ -134,7 +137,7 @@ function IsPtInPoly() {
 			}
 		}
 	}
-	if (iSum % 2 != 0){
+	if (iSum % 2 != 0){      
         return true;
     }
 	return false;
@@ -164,16 +167,16 @@ function getScanDirection(dir){
 function get_vertical_scanner_line(distance){
     let scanner_list = new Array(); //掃描線清單
 
-    var min_lng = points_marker_by_user[0].lng; //假設最小經度為points_marker_by_user[0]的經度
-    var max_lng = points_marker_by_user[0].lng; //假設最大經度為points_marker_by_user[0]的經度
-    var min_lat = points_marker_by_user[0].lat; //假設最小緯度為points_marker_by_user[0]的緯度
-    var max_lat = points_marker_by_user[0].lat; //假設最大緯度為points_marker_by_user[0]的緯度
+    var min_lng = shape_path_points[0].lng; //假設最小經度為shape_path_points[0]的經度
+    var max_lng = shape_path_points[0].lng; //假設最大經度為shape_path_points[0]的經度
+    var min_lat = shape_path_points[0].lat; //假設最小緯度為shape_path_points[0]的緯度
+    var max_lat = shape_path_points[0].lat; //假設最大緯度為shape_path_points[0]的緯度
 
-    for(var i=0; i<points_marker_by_user.length;i++){   //走訪座標清單
-        if(min_lng > points_marker_by_user[i].lng) min_lng = points_marker_by_user[i].lng;  //找最小經度
-        if(max_lng < points_marker_by_user[i].lng) max_lng = points_marker_by_user[i].lng;  //找最大經度
-        if(min_lat > points_marker_by_user[i].lat) min_lat = points_marker_by_user[i].lat;  //找最小緯度
-        if(max_lat < points_marker_by_user[i].lat) max_lat = points_marker_by_user[i].lat;  //找最大緯度
+    for(var i=0; i<shape_path_points.length;i++){   //走訪座標清單
+        if(min_lng > shape_path_points[i].lng) min_lng = shape_path_points[i].lng;  //找最小經度
+        if(max_lng < shape_path_points[i].lng) max_lng = shape_path_points[i].lng;  //找最大經度
+        if(min_lat > shape_path_points[i].lat) min_lat = shape_path_points[i].lat;  //找最小緯度
+        if(max_lat < shape_path_points[i].lat) max_lat = shape_path_points[i].lat;  //找最大緯度
     }
 
     let dist = distance * 0.00000900900901; //公尺轉經緯度: 1公尺約0.00000900900901度
@@ -198,16 +201,16 @@ function get_vertical_scanner_line(distance){
 function get_horizontal_scanner_line(distance){
     let scanner_list = new Array(); //掃描線清單
 
-    var min_lng = points_marker_by_user[0].lng; //假設最小經度為points_marker_by_user[0]的經度
-    var max_lng = points_marker_by_user[0].lng; //假設最大經度為points_marker_by_user[0]的經度
-    var min_lat = points_marker_by_user[0].lat; //假設最小緯度為points_marker_by_user[0]的緯度
-    var max_lat = points_marker_by_user[0].lat; //假設最大緯度為points_marker_by_user[0]的緯度
+    var min_lng = shape_path_points[0].lng; //假設最小經度為shape_path_points[0]的經度
+    var max_lng = shape_path_points[0].lng; //假設最大經度為shape_path_points[0]的經度
+    var min_lat = shape_path_points[0].lat; //假設最小緯度為shape_path_points[0]的緯度
+    var max_lat = shape_path_points[0].lat; //假設最大緯度為shape_path_points[0]的緯度
 
-    for(var i=0; i<points_marker_by_user.length;i++){   //走訪座標清單
-        if(min_lng > points_marker_by_user[i].lng) min_lng = points_marker_by_user[i].lng;  //找最小經度
-        if(max_lng < points_marker_by_user[i].lng) max_lng = points_marker_by_user[i].lng;  //找最大經度
-        if(min_lat > points_marker_by_user[i].lat) min_lat = points_marker_by_user[i].lat;  //找最小緯度
-        if(max_lat < points_marker_by_user[i].lat) max_lat = points_marker_by_user[i].lat;  //找最大緯度
+    for(var i=0; i<shape_path_points.length;i++){   //走訪座標清單
+        if(min_lng > shape_path_points[i].lng) min_lng = shape_path_points[i].lng;  //找最小經度
+        if(max_lng < shape_path_points[i].lng) max_lng = shape_path_points[i].lng;  //找最大經度
+        if(min_lat > shape_path_points[i].lat) min_lat = shape_path_points[i].lat;  //找最小緯度
+        if(max_lat < shape_path_points[i].lat) max_lat = shape_path_points[i].lat;  //找最大緯度
     }
 
     let dist = distance * 0.00000900900901; //公尺轉經緯度: 1公尺約0.00000900900901度
@@ -233,21 +236,21 @@ function get_horizontal_scanner_line(distance){
 function vertical_scan(scanner_list){
     let points_on_edges_of_graphics = new Array();
 
-    for(var index=0; index<points_marker_by_user.length; index++){
-        if(index < points_marker_by_user.length-1){
-            //L.polyline([points_marker_by_user[index], points_marker_by_user[index + 1]], { color: ' red ' }).addTo(map);  //繪製被掃描線
+    for(var index=0; index<shape_path_points.length; index++){
+        if(index < shape_path_points.length-1){
+            //L.polyline([shape_path_points[index], shape_path_points[index + 1]], { color: ' red ' }).addTo(map);  //繪製被掃描線
             for(var i=0; i<scanner_list.length; i++){
                 //L.polyline(scanner_list[i], { color: ' blue ' }).addTo(map);  //繪製掃描線
-                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], points_marker_by_user[index], points_marker_by_user[index + 1]);
+                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], shape_path_points[index], shape_path_points[index + 1]);
                 if(result != false){
                     points_on_edges_of_graphics.push(result);
                 }
             }
         }else{
-            //L.polyline([points_marker_by_user[index], points_marker_by_user[0]], { color: ' red ' }).addTo(map);  //繪製被掃描線
+            //L.polyline([shape_path_points[index], shape_path_points[0]], { color: ' red ' }).addTo(map);  //繪製被掃描線
             for(var i=0; i<scanner_list.length; i++){
                 //L.polyline(scanner_list[i], { color: ' blue ' }).addTo(map);  //繪製掃描線
-                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], points_marker_by_user[index], points_marker_by_user[0]);  //頭尾相接
+                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], shape_path_points[index], shape_path_points[0]);  //頭尾相接
                 if(result != false){
                     points_on_edges_of_graphics.push(result);
                 }
@@ -262,21 +265,21 @@ function vertical_scan(scanner_list){
 function horizontal_scan(scanner_list){
     let points_on_edges_of_graphics = new Array();
 
-    for(var index=0; index<points_marker_by_user.length; index++){
-        if(index < points_marker_by_user.length-1){
-            //L.polyline([points_marker_by_user[index], points_marker_by_user[index + 1]], { color: ' red ' }).addTo(map);  //繪製被掃描線
+    for(var index=0; index<shape_path_points.length; index++){
+        if(index < shape_path_points.length-1){
+            //L.polyline([shape_path_points[index], shape_path_points[index + 1]], { color: ' red ' }).addTo(map);  //繪製被掃描線
             for(var i=0; i<scanner_list.length; i++){
                 //L.polyline(scanner_list[i], { color: ' blue ' }).addTo(map);  //繪製掃描線
-                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], points_marker_by_user[index], points_marker_by_user[index + 1]);
+                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], shape_path_points[index], shape_path_points[index + 1]);
                 if(result != false){
                     points_on_edges_of_graphics.push(result);
                 }
             }
         }else{
-            //L.polyline([points_marker_by_user[index], points_marker_by_user[0]], { color: ' red ' }).addTo(map);  //繪製被掃描線
+            //L.polyline([shape_path_points[index], shape_path_points[0]], { color: ' red ' }).addTo(map);  //繪製被掃描線
             for(var i=0; i<scanner_list.length; i++){
                 //L.polyline(scanner_list[i], { color: ' blue ' }).addTo(map);  //繪製掃描線
-                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], points_marker_by_user[index], points_marker_by_user[0]);  //頭尾相接
+                let result = segmentsIntr(scanner_list[i][0], scanner_list[i][1], shape_path_points[index], shape_path_points[0]);  //頭尾相接
                 if(result != false){
                     points_on_edges_of_graphics.push(result);
                 }
@@ -386,70 +389,75 @@ function sort_list(list, dir){
 
 function sort_lat(list){
     list.sort(function(p1, p2){    //以lat為基準進行排序(N->S)
-       return p2.lat - p1.lat;
-    });
- }
+		return p2.lat - p1.lat;
+	});
+}
 
- function sort_lat2(list){
-    list.sort(function(p1, p2){    //以lat為基準進行排序(S->N)
-       return p1.lat - p2.lat;
-    });
- }
- 
+function sort_lat2(list){
+	list.sort(function(p1, p2){    //以lat為基準進行排序(S->N)
+		return p1.lat - p2.lat;
+	});
+}
+
 function sort_lng(list){
-    list.sort(function(p1, p2){    //以lng為基準進行排序(E->W)
-       return p2.lng - p1.lng;
-    });
- }
+	list.sort(function(p1, p2){    //以lng為基準進行排序(E->W)
+		return p2.lng - p1.lng;
+	});
+}
 
- function sort_lng2(list){
-    list.sort(function(p1, p2){    //以lng為基準進行排序(W->E)
-       return p1.lng - p2.lng;
-    });
- }
-
+function sort_lng2(list){
+	list.sort(function(p1, p2){    //以lng為基準進行排序(W->E)
+		return p1.lng - p2.lng;
+	});
+}
 
 //繪製路線
 function draw_path(list){
     L.polyline(list,{color: 'blue'}).addTo(map);
 }
 
+function handle_shape_path_lines(data_to_mcu){
+	let arr = new Array();
+	for(var i=0;i<data_to_mcu.length;i++){
+		var tmp = {
+			"id": i+1,
+			"sp": data_to_mcu[i][1],
+			"ep": data_to_mcu[i][2],
+		};
+		arr.push(tmp);
+	}
+	shape_path_lines = arr;
+}
+
 //打包並回傳資料
 function data_package(){
     let data_list = new Array();    //打包好的bin檔案
-    bubblesort();                   //依EP.lat進行排序
-    init_next_point_address();      //設定當前address
-    get_next_point_after_sort();    //設定next address 
+    
 
     let data_info = new Uint8Array(new ArrayBuffer(16));  //檔案資訊
     data_info[0] = new Date().getMonth()+1  //月
     data_info[1] = new Date().getDate();    //日
-    if(points_on_edges_of_graphics_to_output.length < 256){ //資料長度
+    if(shape_path_lines.length < 256){ //資料長度
         data_info[2] = 0;
-        data_info[3] = points_on_edges_of_graphics_to_output.length;
+        data_info[3] = shape_path_lines.length;
     }else{
-        data_info[2] = parseInt(points_on_edges_of_graphics_to_output.length / 256);
-        data_info[3] = parseInt(points_on_edges_of_graphics_to_output.length % 256);
+        data_info[2] = parseInt(shape_path_lines.length / 256);
+        data_info[3] = parseInt(shape_path_lines.length % 256);
     }
 
     data_list.push(data_info);
 
 
-    for(var i=0; i<points_on_edges_of_graphics_to_output.length; i++){
+    for(var i=0; i<shape_path_lines.length; i++){
         var data_ep = {
-            'nsew_area':get_nsew_area(points_on_edges_of_graphics_to_output[i][2].lat, points_on_edges_of_graphics_to_output[i][2].lon),
-            'lat':parseInt(points_on_edges_of_graphics_to_output[i][2].lat * 1000000),  //結束點緯度
-            'lon':parseInt(points_on_edges_of_graphics_to_output[i][2].lon * 1000000),  //結束點經度
-            'cursor':parseInt(get_point_cursor(points_on_edges_of_graphics_to_output[i][1], points_on_edges_of_graphics_to_output[i][2]) / 2),
-            'next_address':points_on_edges_of_graphics_to_output[i][4],
-            'lat_differ':get_point_differ(parseInt(points_on_edges_of_graphics_to_output[i][1].lat * 1000000), parseInt(points_on_edges_of_graphics_to_output[i][2].lat * 1000000)),
-            'lon_differ':get_point_differ(parseInt(points_on_edges_of_graphics_to_output[i][1].lon * 1000000), parseInt(points_on_edges_of_graphics_to_output[i][2].lon * 1000000)),
+            'nsew_area':get_nsew_area(shape_path_lines[i][2].lat, shape_path_lines[i][2].lon),
+            'lat':parseInt(shape_path_lines[i][2].lat * 1000000),  //結束點緯度
+            'lon':parseInt(shape_path_lines[i][2].lon * 1000000),  //結束點經度
+            'cursor':parseInt(get_point_cursor(shape_path_lines[i][1], shape_path_lines[i][2]) / 2),
+            'next_address':shape_path_lines[i][4],
+            'lat_differ':get_point_differ(parseInt(shape_path_lines[i][1].lat * 1000000), parseInt(shape_path_lines[i][2].lat * 1000000)),
+            'lon_differ':get_point_differ(parseInt(shape_path_lines[i][1].lon * 1000000), parseInt(shape_path_lines[i][2].lon * 1000000)),
         }; 
-        
-        var tmp = {lat: data_ep.lat / 1000000, lng: data_ep.lon / 1000000};
-        L.marker(tmp , {
-            title: "Address:"+(i-1)+" , Location:("+tmp.lat+","+tmp.lng+")",
-        }).addTo(map);
 
         let arr = new Uint8Array(new ArrayBuffer(16));
         arr[0] = data_ep.nsew_area;
@@ -475,7 +483,7 @@ function data_package(){
         
         data_list.push(arr);
 
-        console.log(points_on_edges_of_graphics_to_output[i]);
+        console.log(shape_path_lines[i]);
     }
 
     let arr = new Uint8Array(new ArrayBuffer(16));
@@ -485,4 +493,189 @@ function data_package(){
     data_list.push(arr);
 
     return data_list;
+}
+
+function shape_path_lines_sort_by_epLat() {
+    const coords = shape_path_lines;
+    const n = coords.length;
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = 0; j < n - i - 1; j++) {
+            if (coords[j].ep.lat > coords[j + 1].ep.lat) {
+                [coords[j], coords[j + 1]] = [coords[j + 1], coords[j]];
+            }
+        }
+    }
+
+    shape_path_lines = coords
+}
+
+function shape_path_set_next_address(){
+    let temp = new Array();
+    shape_path_lines.forEach(line => {
+        var target = line.id+1;
+        let next_address = -1;
+        for(var i=0;i<shape_path_lines.length;i++){
+            if(shape_path_lines[i].id == target){
+                next_address = i+1;
+                break;
+            }
+        }
+        let cell = {
+            "id": line.id,
+            "sp": line.sp,
+            "ep": line.ep,
+            "next" : next_address
+        };
+
+        temp.push(cell);
+    });
+    shape_path_lines = temp;
+}
+
+function shape_path_sep_cursor(){
+    let temp = new Array();
+    shape_path_lines.forEach(line => {
+        const dLon = (line.ep.lon - line.sp.lon) * Math.PI / 180;
+        const y = Math.sin(dLon) * Math.cos(line.ep.lat * Math.PI / 180);
+        const x = Math.cos(line.sp.lat * Math.PI / 180) * Math.sin(line.ep.lat * Math.PI / 180) - Math.sin(line.sp.lat * Math.PI / 180) * Math.cos(line.ep.lat * Math.PI / 180) * Math.cos(dLon);
+        const brng = Math.atan2(y, x) * 180 / Math.PI;
+        var cur = parseInt((brng + 360) % 360);
+
+        let cell = {
+            "id": line.id,
+            "sp": line.sp,
+            "ep": line.ep,
+            "cursor": cur,
+            "next" : line.next
+        };
+        temp.push(cell);
+    });
+    shape_path_lines = temp;
+}
+
+function shape_path_sep_differ(){
+    let temp = new Array();
+    shape_path_lines.forEach(line => {
+        let cell = {
+            "id": line.id,
+            "sp": line.sp,
+            "ep": line.ep,
+            "cursor": line.cursor,
+            "next": line.next,
+            "diff": {
+                "lat_diff": line.sp.lat - line.ep.lat,
+                "lon_diff": line.sp.lon - line.ep.lon
+            },
+        };
+        temp.push(cell);
+    });
+    shape_path_lines = temp;
+}
+
+function shape_path_lines_nsew_area(){	//判讀東西經及南北緯
+    let temp = new Array();
+    shape_path_lines.forEach(line => {
+        var area = -1;
+        if(line.ep.lat > 0 && line.ep.lon > 0){
+            area = 17;	//17(dec) = 11(hex)
+        }else if(line.ep.lat > 0 && line.ep.lon < 0){
+            area = 16;	//16(dec) = 10(hex)
+        }else if(line.ep.lat < 0 && line.ep.lon > 0){
+            area = 1;	//1(dec) = 01(hex)
+        }else if(line.ep.lat < 0 && line.ep.lon < 0){
+            area = 0;	//0(dec) = 00(hex)
+        }
+
+        let cell = {
+            "id": line.id,
+            "nsew": area,
+            "sp": line.sp,
+            "ep": line.ep,
+            "cursor": line.cursor,
+            "next": line.next,
+            "diff": {
+                "lat_diff": line.sp.lat - line.ep.lat,
+                "lon_diff": line.sp.lon - line.ep.lon
+            },
+        };
+        temp.push(cell);
+    });
+
+    shape_path_lines = temp;
+}
+
+function shape_path_data_to_file(){
+    var data_list = new Array();
+    let data_info = new Uint8Array(new ArrayBuffer(16));  //檔案資訊
+    data_info[0] = new Date().getMonth()+1  //月
+    data_info[1] = new Date().getDate();    //日
+    if(shape_path_lines.length < 256){ //資料長度
+        data_info[2] = 0;
+        data_info[3] = shape_path_lines.length;
+    }else{
+        data_info[2] = (shape_path_lines.length >> 8) & 0xFF;
+        data_info[3] = shape_path_lines.length & 0xFF;
+    }
+
+    data_list.push(data_info);
+
+    shape_path_lines.forEach(line => {
+        let arr = new Uint8Array(new ArrayBuffer(16));
+        arr[0] = line.nsew;
+        arr[1] = ((line.ep.lat * 1000000)>>24) & 0xFF;
+        arr[2] = ((line.ep.lat * 1000000)>>16) & 0xFF;
+        arr[3] = ((line.ep.lat * 1000000)>>8) & 0xFF;
+        arr[4] = (line.ep.lat * 1000000) & 0xFF;
+        arr[5] = ((line.ep.lon * 1000000) >>24) & 0xFF;
+        arr[6] = ((line.ep.lon * 1000000) >>16) & 0xFF;
+        arr[7] = ((line.ep.lon * 1000000) >>8) & 0xFF;
+        arr[8] = (line.ep.lon * 1000000) & 0xFF;
+        arr[9] = shape_path_set_next_address_format(line.next)[0];
+        arr[10] = shape_path_set_next_address_format(line.next)[1];
+        arr[11] = parseInt(line.cursor / 2);
+        arr[12] = shape_path_set_diff_format(line.diff.lat_diff)[0];
+        arr[13] = shape_path_set_diff_format(line.diff.lat_diff)[1];
+        arr[14] = shape_path_set_diff_format(line.diff.lon_diff)[0];
+        arr[15] = shape_path_set_diff_format(line.diff.lon_diff)[1];
+    
+        data_list.push(arr);
+    });
+
+    arr = new Uint8Array(new ArrayBuffer(16));
+    for(var i = 0; i < 16; i++){
+        arr[i] = 255;
+    }
+    data_list.push(arr);
+    
+    return data_list;
+}
+
+function shape_path_set_next_address_format(next_address){
+    var data = new Uint8Array(new ArrayBuffer(2));
+    
+    if(next_address == -1){
+        data[0] = 0xFF;
+        data[1] = 0xFF;
+    }else if(next_address < 256){
+        data[0] = 0xFF;
+        data[1] = next_address & 0xFF;
+    }else{
+        data[0] = (next_address >> 8) & 0xFF;
+        data[1] = next_address & 0xFF;
+    }
+    return data;
+}
+
+function shape_path_set_diff_format(diff){
+    diff = diff * 1000000;
+    if(diff < 0){
+        diff = 0xFFFF + diff + 1; // 將差轉換為二補數表示法
+    }
+
+    var data = new Uint8Array(new ArrayBuffer(2));
+    
+    data[0] = (diff >> 8) & 0xFF;
+    data[1] = diff & 0xFF;
+
+    return data;
 }

@@ -19,7 +19,8 @@
         <script src="assets/js/config.js"></script>
         <script src="assets/js/bluetooth.js"></script>
         <script src="assets/js/create_and_init_map.js"></script>
-        <script src="assets/js/set_points_and_path.js"></script>
+        <script src="assets/js/line_path_process.js"></script>
+        <script src="assets/js/shape_path_process.js"></script>
         <script src="assets/js/download_files.js"></script>
         <script src="src/L.Control.Locate.js" ></script>
 
@@ -28,9 +29,21 @@
     <body  onload="init();">
 	
 		<div id="map"></div>
-	
+        
         <div class="frame">
-            <div class="setting">
+            <div class="兩個設定區塊的容器">
+                <div class="設定區的容器">
+                    <div id="mutiple_side_setting" class="setting">
+                        <label><h3>線段路線設定>>></h3></label>
+                        <label class="btn_label">
+                            <button class="set_btn" onclick="download_line_bin();">匯出</button>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="設定區的容器">
+                    <div id="mutiple_side_setting" class="setting">
+                        <label><h3>多邊形路線設定>>></h3></label>
                         <p>
                             <label>設定間隔距離:</label><input id="interval_of_distance_set_by_user" type="text"></input><label> 單位: </label>
                             <select id="unit_of_distance">
@@ -55,20 +68,27 @@
                                     <option value="WESN">由西向東，由南向北</option>
                             </select>
                         </p>
-				
-                <label class="btn_label">
-                    <button class="set_btn" onclick="create_new_list_by_distance();">套用</button>	
-                </label>
+                        <label class="btn_label">
+                            <button class="set_btn" onclick="shape_data_to_download();">匯出</button>
+                        </label>
+                    </div>
+                </div>
             </div>
-			
-			<div class="frame2">
-				<img class="dowload_btn" src="images/download.png" title="下載路線資料" onclick="download_file();"></img>
-                <img class="dowload_btn" src="images/bt.png" title="連線藍牙" onclick="init_bt();"></img>
-				<div class="log">
-					<ul id="log_msg"></ul>
-				</div>
-			</div>
+
+            
+            <div class="frame2">
+                <div class="功能列">
+                    <img class="dowload_btn" src="images/download.png" title="下載路線資料" onclick="download_file();"></img>
+                    <img class="dowload_btn" src="images/bt.png" title="連線藍牙" onclick=""></img>
+                </div>
+                
+                <div class="log">
+                    <ul id="log_msg"></ul>
+                </div>
+            </div>
         </div>
+
+        
         
         <script type='application/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.2.3/leaflet.draw.js'></script> 
     </body>

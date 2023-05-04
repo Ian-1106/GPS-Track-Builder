@@ -16,6 +16,24 @@ select{
 	width: 15%;
 }
 
+.兩個設定區塊的容器{
+    width: 50%;
+    border-width: 3px;
+}
+
+.設定區的容器{
+    width: 100%;
+    border-width: 10px;
+    border-color: white;
+}
+
+.多邊形選框路線規劃設定{
+    width:100%;
+    margin: 0 auto;
+    background-color: #7B7B7B;
+    overflow-y: overlay;
+}
+
 .frame{
     width:100%;
     margin-top: 1%;
@@ -24,19 +42,20 @@ select{
 
 .frame2{
 	width:100%;
+    min-height: auto;
     display:flex;
 	flex-direction:column;
 	max-height: 200px;
 }
 
 .setting{
-    width:48%;
+    width:100%;
     margin: 0 auto;
     padding:1%;
     background-color: #dedede;
-    overflow-y: overlay;
 	align-items: center;
-	border-radius:3%;
+    border-width: 3px;
+    border-color: blue;
 }
 
 .set_btn{
@@ -73,11 +92,16 @@ select{
 }
 
 .log{
-    width:99%;
+    width:98%;
 	margin-top:0.5%;
-	margin-left:1%;
+	margin-left:2%;
+    margin-right: 1%;
     background-color: #123456;
 	color: #FFFFFF;
     overflow-y: overlay;
 }
 
+.功能列{
+    padding: 1%;
+    display: flex;
+}
