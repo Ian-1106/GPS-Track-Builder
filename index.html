@@ -4,6 +4,7 @@
         <title>GPS Track Builder</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
         <meta name="viewport" content="width=device-width, initial-scale=1"/> 
+        <meta name="serial" content>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
         <link href='https://api.mapbox.com/mapbox.js/v3.1.1/mapbox.css' rel='stylesheet' />
         
@@ -79,7 +80,7 @@
             <div class="frame2">
                 <div class="功能列">
                     <img class="dowload_btn" src="images/download.png" title="下載路線資料" onclick="download_file();"></img>
-                    <img class="dowload_btn" src="images/bt.png" title="連線藍牙" onclick=""></img>
+                    <img class="dowload_btn" src="images/bt.png" title="連線藍牙" onclick="init_bt();"></img>
                 </div>
                 
                 <div class="log">
