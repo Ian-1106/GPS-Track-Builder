@@ -28,8 +28,8 @@
     </head>
 
     <body  onload="init();">
-	
-		<div id="map"></div>
+        <div id="map"></div>
+        <div class=""><label></label></div>
         
         <div class="frame">
             <div class="兩個設定區塊的容器">
@@ -75,12 +75,12 @@
                     </div>
                 </div>
             </div>
-
             
             <div class="frame2">
                 <div class="功能列">
                     <img class="dowload_btn" src="images/download.png" title="下載路線資料" onclick="download_file();"></img>
                     <img class="dowload_btn" src="images/bt.png" title="連線藍牙" onclick="init_bt();"></img>
+                    <img class="dowload_btn" src="images/monitor.png" title="監看視窗" onclick="open_popup();"></img>
                 </div>
                 
                 <div class="log">
@@ -88,7 +88,6 @@
                 </div>
             </div>
         </div>
-
         
         
         <script type='application/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.2.3/leaflet.draw.js'></script> 
