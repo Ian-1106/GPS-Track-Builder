@@ -8,8 +8,35 @@ select{
 	border-radius:5%;
 }
 
+.地圖與監看視窗的容器 {
+    position: fixed;
+    width: 99%;
+    height: 65%;
+    z-index: -1;
+}
+
 #map {
-    height:75vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.監看視窗 {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10%;
+    padding: 1%;
+    opacity: 0;
+    background-color: #123456;
+    z-index: 1;
+}
+
+.監看視窗文字{
+    color: aquamarine;
 }
 
 #interval_of_distance_set_by_user{
@@ -35,8 +62,9 @@ select{
 }
 
 .frame{
-    width:100%;
-    margin-top: 1%;
+    position: fixed;
+    width: 99%;
+    margin-top: 33%;
     display:flex;
 }
 

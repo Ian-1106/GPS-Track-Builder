@@ -1,36 +1,51 @@
 async function init_bt() {
     if (bt_open_flag == false) {
+        let reader = null;
         bt_open_flag = true;
         try {
             bt_port = null;
             const baudRate = 115200;
             bt_port = await navigator.serial.requestPort();
-            await bt_port.open({ baudRate });
+
+            if (!bt_port.opened) await bt_port.open({ baudRate });
             console.log('Selected serial port:' + bt_port.name);
 
             document.querySelector('#bt_btn').src = "images/disconnect_bt.png";
 
-            const reader = bt_port.readable.getReader();
+            reader = bt_port.readable.getReader();
             while (bt_open_flag) {
                 const { value, done } = await reader.read();
                 if (done) {
                     console.log('Serial port closed');
                     break;
                 }
-                //console.log(value);
                 let data = receive_bt_data(value);
                 data = handle_bt_data_to_list(data);
-                if(data != -1) await draw_cell(data);
+                if(data != -1) {
+                    serial_monitor(data);
+                    await draw_cell(data);
+                }
+
             }
-            
-            reader.cancel();// 解除讀取器的鎖定
         } catch (error) {
             console.error('Error opening serial port:' + error);
         } finally {
-        await bt_port.close();
+            try {
+              await reader.cancel(); // 等待讀取器取消鎖定
+            } catch (error) {
+                console.error('Error cancelling reader: ' + error);
+            }
+            if (bt_port && bt_port.readable) {
+                try {
+                    await bt_port.close(); // 關閉 port
+                } catch (error) {
+                    console.error('Error closing port: ' + error);
+                }
+            }
         }
     } else if (bt_open_flag == true) {
         bt_open_flag = false;
+        document.querySelector('#bt_btn').src = "images/bt.png";
     }
 }
 
@@ -103,9 +118,22 @@ async function draw_cell(cell){
     path = null;
 }
 
+function serial_monitor(cell){
+    let text = document.querySelector(".監看視窗文字");
+    text.innerHTML = "SP:("+cell.sp.lat+","+cell.sp.lon+")<br>"
+                    +"EP:("+cell.ep.lat+","+cell.ep.lon+")<br>"
+                    +"YP:("+cell.yp.lat+","+cell.yp.lon+")<br>"
+                    +"Offset:"+cell.offset;
+}
+
 
 
 function open_popup(){
-    //handle_bt_data_to_list("240167691c072e335001676B8A072E335701676B85072E31941B0611FFFF9B23");
-
+    let monitor = document.querySelector(".監看視窗");
+    let opacity = window.getComputedStyle(monitor).opacity;
+    if(opacity == 0){
+        monitor.style.opacity = 0.7;
+    }else if(opacity == 0.7){
+        monitor.style.opacity = 0;
+    }
 }

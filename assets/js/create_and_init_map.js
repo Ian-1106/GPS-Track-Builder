@@ -3,7 +3,7 @@ function create_map(){
   let zoom = 15; // 0 - 18
   let center = [25.0854061,121.5615012]; // 中心點座標
 
-  map = L.map(document.getElementById('map'),{  //map基礎設定
+  map = L.map(document.querySelector('#map'),{  //map基礎設定
     center: [23.5, 121],  // 中心點
     zoom: 18,  // 縮放層級
     crs: L.CRS.EPSG3857,  // 座標系統
