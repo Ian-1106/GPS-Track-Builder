@@ -6,8 +6,10 @@ async function init_bt() {
             bt_port = null;
             const baudRate = 115200;
             bt_port = await navigator.serial.requestPort();
-
+            
+            if (!bt_port && !bt_port.readable) await bt_port.close();
             if (!bt_port.opened) await bt_port.open({ baudRate });
+            
             console.log('Selected serial port:' + bt_port.name);
 
             document.querySelector('#bt_btn').src = "images/disconnect_bt.png";
@@ -19,13 +21,16 @@ async function init_bt() {
                     console.log('Serial port closed');
                     break;
                 }
-                let data = receive_bt_data(value);
-                data = handle_bt_data_to_list(data);
-                if(data != -1) {
-                    serial_monitor(data);
-                    await draw_cell(data);
+                receive_bt_data(value);
+                let data = btData;
+                if(data.length >= 64){
+                    console.log(data);
+                    data = handle_bt_data_to_list(data);
+                    if(data != -1) {
+                        serial_monitor(data);
+                        await draw_cell(data);
+                    }
                 }
-
             }
         } catch (error) {
             console.error('Error opening serial port:' + error);
@@ -49,23 +54,30 @@ async function init_bt() {
     }
 }
 
-function receive_bt_data(value){
-    let bt_data = '';
-    let receiving_data_flag = false;
-    value = Array.from(new Uint8Array(value)).map(b => b.toString(16).padStart(2, '0')).join('');   // 將接收到的值轉換成 16 進制字串並補零
-    const start = "aa", end = "55", data_length = 64;
-    if(receiving_data_flag == false){
-        receiving_data_flag = true;
-        const startIndex = value.indexOf(start);
-        const endIndex = value.indexOf(end, startIndex + 1);
-        if(startIndex >= 0 && endIndex > startIndex){
-            bt_data = value.substring(startIndex + 2, endIndex);
+let receivingDataFlag = false;
+let btData = '';
+let A5_flag = 0;    //0:有AA有55，1:有AA沒55
+function receive_bt_data(value) {
+    // 轉換為 16 進制字串並補零
+    value = Array.from(new Uint8Array(value)).map((b) => b.toString(16).padStart(2, '0')).join('');
+    //console.log(value);
+    
+    let startIndex = value.indexOf("aa"), endIndex = value.indexOf("55");
+    if(A5_flag == 0){
+        if(startIndex >= 0 && endIndex >= 0){   //有AA有55
+            btData = value.substring(startIndex, endIndex+2);
+            //console.log(btData);
+        }else if(startIndex >= 0 && endIndex < 0){ //有AA沒55
+            A5_flag = 1;
+            btData = value.substring(startIndex, 64);
+            //console.log(btData);
         }
-        bt_data = "aa"+bt_data+"55";
-        if(bt_data.length != data_length) bt_data = '';
-        receiving_data_flag = false;
+    }else if(A5_flag == 1){
+        if(startIndex < 0 && endIndex >= 0){
+            btData += value.substring(0, endIndex+2);
+            A5_flag = 0;
+        }
     }
-    return bt_data;
 }
 
 function handle_bt_data_to_list(value) {
@@ -104,7 +116,7 @@ function handle_bt_data_to_list(value) {
 }
 
 async function draw_cell(cell){
-    console.log(cell);
+    //console.log(cell);
 
     let path = new Array();
     path.push(cell.sp);

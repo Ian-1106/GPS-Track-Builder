@@ -16,7 +16,7 @@ function add_log(msg , font_color){
 var line_data_to_download = new Array();
 function download_line_bin(){
    line_path_process();
-   add_log("路線資料下載完成","blue");
+   add_log("路線資料下載完成","#37caad");
 }
 
 //選框路線設定

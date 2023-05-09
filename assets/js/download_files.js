@@ -14,5 +14,5 @@ function download_file() {
     link.download = fileName;
     link.click();
 
-    add_log("路線資料下載完成","blue");
+    add_log("路線資料下載完成","#37caad");
 }
