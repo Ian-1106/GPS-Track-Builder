@@ -4,13 +4,14 @@ async function init_bt() {
         bt_open_flag = true;
         try {
             bt_port = null;
-            const baudRate = 115200;
+            const baudRate = document.querySelector("#baund_rate_select").options[document.querySelector("#baund_rate_select").selectedIndex].text; //取得BaundRate
             bt_port = await navigator.serial.requestPort();
             
             if (!bt_port && !bt_port.readable) await bt_port.close();
             if (!bt_port.opened) await bt_port.open({ baudRate });
             
             console.log('Selected serial port:' + bt_port.name);
+            console.log("baudRate:"+baudRate);
 
             document.querySelector('#bt_btn').src = "images/disconnect_bt.png";
 
@@ -34,6 +35,7 @@ async function init_bt() {
             }
         } catch (error) {
             console.error('Error opening serial port:' + error);
+            alert('Error opening serial port:' + error + '\n' + "請檢察Baund Rate是否正確");
         } finally {
             try {
               await reader.cancel(); // 等待讀取器取消鎖定

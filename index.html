@@ -76,6 +76,21 @@
                     <div class="功能列">
                         <img class="dowload_btn" style="width: 30px;height: 30px;" src="images/download.png" title="下載路線資料" onclick="download_file();"></img>
                         <img id="bt_btn" class="dowload_btn" style="width: 25px;height: 30px;" src="images/bt.png" title="連線藍牙" onclick="init_bt();"></img>
+                        <select id="baund_rate_select" onchange="init_bt();">
+                            <option>300</option>
+                            <option>1200</option>
+                            <option>2400</option>
+                            <option>4800</option>
+                            <option>9600</option>
+                            <option>19200</option>
+                            <option>38400</option>
+                            <option>57600</option>
+                            <option>115200</option>
+                            <option>230400</option>
+                            <option>460800</option>
+                            <option>921600</option>
+                            <option>1843200</option>
+                        </select>
                         <img class="dowload_btn" style="width: 40px;height: 30px;" src="images/monitor.png" title="監看視窗" onclick="open_popup();"></img>
                     </div>
                     
