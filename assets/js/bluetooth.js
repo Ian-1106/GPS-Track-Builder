@@ -25,7 +25,7 @@ async function init_bt() {
                 receive_bt_data(value);
                 let data = btData;
                 if(data.length >= 64){
-                    console.log(data);
+                    console.log("原始資料:"+data);
                     data = handle_bt_data_to_list(data);
                     if(data != -1) {
                         serial_monitor(data);
@@ -88,7 +88,7 @@ function handle_bt_data_to_list(value) {
     const check_sum = parseInt(value.substring(60, 62), 16);
 
     let proc_check_sum = 0;
-    for (let i = 2; i < 56; i += 2) {
+    for (let i = 2; i < 59; i += 2) {
         let byte = parseInt(value.substring(i, i + 2), 16);
         proc_check_sum ^= byte;
     }
@@ -109,18 +109,17 @@ function handle_bt_data_to_list(value) {
             },
             "dist_offset": parseInt(value.substring(50, 54), 16) << 16 >> 16,
             "nsew": parseInt(value.substring(54, 56), 16),
-            "cursr_offset": parseInt(value.substring(56, 60), 16) << 16 >> 16,
+            "cursor_offset": parseInt(value.substring(56, 60), 16) << 16 >> 16,
         };
 
-        console.log(value);
+        //console.log("打包過的:"+value);
         return cell;
     }
     return -1;
 }
 
 async function draw_cell(cell){
-    //console.log(cell);
-
+    console.log(cell);
     let path = new Array();
     path.push(cell.sp);
     path.push(cell.ep);
@@ -138,8 +137,14 @@ function serial_monitor(cell){
     text.innerHTML = "SP:("+cell.sp.lat+","+cell.sp.lon+")<br>"
                     +"EP:("+cell.ep.lat+","+cell.ep.lon+")<br>"
                     +"YP:("+cell.yp.lat+","+cell.yp.lon+")<br>"
-                    +"Dist Offset:"+cell.dist_offset
+                    +"Dist Offset:"+cell.dist_offset+"<br>"
                     +"Cursor Offset:"+cell.cursor_offset ;
+
+    JJ_log_file += "SP:("+cell.sp.lat+","+cell.sp.lon+") , "
+                    +"EP:("+cell.ep.lat+","+cell.ep.lon+") , "
+                    +"YP:("+cell.yp.lat+","+cell.yp.lon+") , "
+                    +"Dist Offset:"+cell.dist_offset+" , "
+                    +"Cursor Offset:"+cell.cursor_offset+"\n" ;
 }
 
 

@@ -40,3 +40,5 @@ let data_to_file = new Array(); //最終要下載的資料
 let bt_port = null;
 let bt_open_flag = false;
 let bt_data_list = new Array(); //從藍牙接收到並整理過的資料
+
+let JJ_log_file = "";

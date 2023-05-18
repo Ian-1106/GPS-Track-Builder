@@ -23,3 +23,13 @@ function download_line_bin(){
 function shape_data_to_download(){
    shape_path_process();
 }
+
+function jj_download_log_file(){
+   const element = document.createElement('a');
+   const file = new Blob([JJ_log_file], { type: 'text/plain' });
+   element.href = URL.createObjectURL(file);
+   element.download = "JJ Log.txt";
+   document.body.appendChild(element);
+   element.click();
+   document.body.removeChild(element);
+}
