@@ -107,8 +107,9 @@ function handle_bt_data_to_list(value) {
                 "lat": parseInt(value.substring(34, 42), 16) / 1000000,
                 "lon": parseInt(value.substring(42, 50), 16) / 1000000
             },
-            "offset": parseInt(value.substring(50, 54), 16) << 16 >> 16,
+            "dist_offset": parseInt(value.substring(50, 54), 16) << 16 >> 16,
             "nsew": parseInt(value.substring(54, 56), 16),
+            "cursr_offset": parseInt(value.substring(56, 60), 16) << 16 >> 16,
         };
 
         console.log(value);
@@ -137,7 +138,8 @@ function serial_monitor(cell){
     text.innerHTML = "SP:("+cell.sp.lat+","+cell.sp.lon+")<br>"
                     +"EP:("+cell.ep.lat+","+cell.ep.lon+")<br>"
                     +"YP:("+cell.yp.lat+","+cell.yp.lon+")<br>"
-                    +"Offset:"+cell.offset;
+                    +"Dist Offset:"+cell.dist_offset
+                    +"Cursor Offset:"+cell.cursor_offset ;
 }
 
 
