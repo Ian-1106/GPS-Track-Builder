@@ -160,7 +160,7 @@ function line_path_set_next_address_format(next_address){
         data[0] = 0xFF;
         data[1] = 0xFF;
     }else if(next_address < 256){
-        data[0] = 0xFF;
+        data[0] = 0x00;
         data[1] = next_address & 0xFF;
     }else{
         data[0] = (next_address >> 8) & 0xFF;
