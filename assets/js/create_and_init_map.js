@@ -1,6 +1,6 @@
 function create_map(){
   // *** 放置地圖
-  let zoom = 15; // 0 - 18
+  let zoom = 18; // 0 - 18
   let center = [25.0854061,121.5615012]; // 中心點座標
 
   map = L.map(document.querySelector('#map'),{  //map基礎設定

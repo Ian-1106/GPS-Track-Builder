@@ -1,4 +1,10 @@
 async function init_bt() {
+    async function sendPacket(packet) {
+        const writer = bt_port.writable.getWriter(); // 取得寫入器
+        await writer.write(packet); // 寫入封包
+        await writer.releaseLock(); // 釋放寫入器鎖定
+    }
+
     if (bt_open_flag == false) {
         let reader = null;
         bt_open_flag = true;
@@ -22,20 +28,38 @@ async function init_bt() {
                     console.log('Serial port closed');
                     break;
                 }
-                receive_bt_data(value);
-                let data = btData;
-                if(data.length >= 64){
-                    console.log("原始資料:"+data);
-                    data = handle_bt_data_to_list(data);
-                    if(data != -1) {
-                        serial_monitor(data);
-                        await draw_cell(data);
-                    }
+                
+                let data = "";
+                switch(bt_data_flag){
+                    case 0: //初始狀態，接收所有路線資料
+                        receive_bt_allPathData(value);
+                        data = btAllPathData;
+                        data = handel_bt_allPathData(data);
+                        if(data != null){
+                            await draw_allPath(data);
+                            bt_data_flag = 1;
+                            const packet = new Uint8Array([0x23, 0x26]); // 要發送的封包資料
+                            await sendPacket(packet);
+                        }
+                        
+                        break;
+                    case 1: //投點狀態，接收當前位置資料
+                        receive_bt_offsetData(value);   //接收offset資料
+                        data = btOffsetDate;
+                        if(data.length >= 64){
+                            console.log("原始資料:"+data);
+                            data = handle_bt_offsetData_to_list(data);
+                            if(data != -1) {
+                                serial_monitor(data);
+                                await draw_cell(data);
+                            }
+                        }
+                        break;
                 }
             }
         } catch (error) {
             console.error('Error opening serial port:' + error);
-            alert('Error opening serial port:' + error + '\n' + "請檢察Baund Rate是否正確");
+            alert('Error opening serial port:' + error + '\n' + "請檢查藍牙與Baund Rate是否正確");
         } finally {
             try {
               await reader.cancel(); // 等待讀取器取消鎖定
@@ -56,33 +80,89 @@ async function init_bt() {
     }
 }
 
-let receivingDataFlag = false;
-let btData = '';
-let A5_flag = 0;    //0:有AA有55，1:有AA沒55
-function receive_bt_data(value) {
-    // 轉換為 16 進制字串並補零
-    value = Array.from(new Uint8Array(value)).map((b) => b.toString(16).padStart(2, '0')).join('');
-    //console.log(value);
+let btAllPathData = "";
+function receive_bt_allPathData(value){
+    value = Array.from(new Uint8Array(value)).map((b) => b.toString(16).padStart(2, '0')).join(''); // 轉換為 16 進制字串並補零
+    let startIndex = value.indexOf("23"), startIndex2 = value.indexOf("24");
+    let endIndex = value.indexOf("25"), endIndex2 = value.indexOf("26");
+
+    if(startIndex != -1 && startIndex2 != -1 && endIndex != -1 && endIndex2 != -1){ //有頭有尾      
+        if(startIndex2 - startIndex == 2 && endIndex2 - endIndex == 2){ //確認起始與結束符號
+            //console.log(startIndex+","+startIndex2+","+endIndex+","+endIndex2);
+            btAllPathData = value;
+        }
+        else btAllPathData = "";
+    }
+    else btAllPathData = "";
+}
+
+function handel_bt_allPathData(value){
+    const sum = parseInt(value.substring(4,6), 16);   //資料總筆數
+    if(sum > 0){
+        console.log("sum:"+sum);
+        let data_temp_list = new Array();
+        for(var i = 0; i < sum; i++){
+            let startIndex = 6 + 32 * i, endIndex = 38 + 32 * i;
+            const cell_str = value.substring(startIndex, endIndex);
+            const cell = {
+                "sp":{
+                    "lat": parseInt(cell_str.substring(0, 8), 16) / 1000000,
+                    "lon": parseInt(cell_str.substring(8, 16), 16) / 1000000,
+                },
+                "ep":{
+                    "lat": parseInt(cell_str.substring(16, 24), 16) / 1000000,
+                    "lon": parseInt(cell_str.substring(24, 32), 16) / 1000000,
+                }
+            };
+            data_temp_list.push(cell);
+        }
+        console.log(data_temp_list);
+        return data_temp_list;
+    }else{
+        alert("沒有數據!");
+        return null;
+    } 
+}
+
+function draw_allPath(cell){
+    for(var i=0; i<cell.length; i++){
+        let path = new Array();
+        path.push(cell[i].sp);
+        path.push(cell[i].ep);
+
+        L.polyline(path, { color: 'blue' }).addTo(map);
     
+        path = null;
+    }
+}
+
+function sendAck(){
+
+}
+
+let btOffsetDate = '';
+let A5_flag = 0;    //0:有AA有55，1:有AA沒55
+function receive_bt_offsetData(value) {
+    value = Array.from(new Uint8Array(value)).map((b) => b.toString(16).padStart(2, '0')).join(''); // 轉換為 16 進制字串並補零
     let startIndex = value.indexOf("aa"), endIndex = value.indexOf("55");
     if(A5_flag == 0){
         if(startIndex >= 0 && endIndex >= 0){   //有AA有55
-            btData = value.substring(startIndex, endIndex+2);
-            //console.log(btData);
+            btOffsetDate = value.substring(startIndex, endIndex+2);
+            //console.log(btOffsetDate);
         }else if(startIndex >= 0 && endIndex < 0){ //有AA沒55
             A5_flag = 1;
-            btData = value.substring(startIndex, 64);
-            //console.log(btData);
+            btOffsetDate = value.substring(startIndex, 64);
+            //console.log(btOffsetDate);
         }
     }else if(A5_flag == 1){
         if(startIndex < 0 && endIndex >= 0){
-            btData += value.substring(0, endIndex+2);
+            btOffsetDate += value.substring(0, endIndex+2);
             A5_flag = 0;
         }
     }
 }
 
-function handle_bt_data_to_list(value) {
+function handle_bt_offsetData_to_list(value) {
     const start = parseInt(value.substring(0, 2), 16);
     const end = parseInt(value.substring(62, 64), 16);
     const check_sum = parseInt(value.substring(60, 62), 16);
@@ -112,22 +192,21 @@ function handle_bt_data_to_list(value) {
             "cursor_offset": parseInt(value.substring(56, 60), 16) << 16 >> 16,
         };
 
-        //console.log("打包過的:"+value);
         return cell;
     }
     return -1;
 }
 
 async function draw_cell(cell){
-    console.log(cell);
     let path = new Array();
     path.push(cell.sp);
     path.push(cell.ep);
-    console.log(path);
+    //console.log(path);
     
     L.polyline(path, { color: 'green' }).addTo(map);
-    if(yp_marker != null) yp_marker.remove();
-    yp_marker = L.marker(cell.yp, { icon: yp_icon }).addTo(map); //標註使用者座標
+
+    if(yp_marker != null) yp_marker.remove();   //移除標註使用者座標
+    yp_marker = L.marker(cell.yp, { icon: yp_icon }).addTo(map); //新增標註使用者座標
 
     path = null;
 }
@@ -146,8 +225,6 @@ function serial_monitor(cell){
                     +"Dist Offset:"+cell.dist_offset+" , "
                     +"Cursor Offset:"+cell.cursor_offset+"\n" ;
 }
-
-
 
 function open_popup(){
     let monitor = document.querySelector(".監看視窗");

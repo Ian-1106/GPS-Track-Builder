@@ -33,3 +33,4 @@ function jj_download_log_file(){
    element.click();
    document.body.removeChild(element);
 }
+
