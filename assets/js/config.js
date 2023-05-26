@@ -46,7 +46,9 @@ let ep_icon = L.icon({
     shadowAnchor: [12, 41]
 });
 
+let sp_marker = null;
 let yp_marker = null;
+let ep_marker = null;
 
 let drawItem;   //圖層
 

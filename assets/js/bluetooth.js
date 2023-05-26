@@ -16,8 +16,9 @@ async function init_bt() {
             if (!bt_port && !bt_port.readable) await bt_port.close();
             if (!bt_port.opened) await bt_port.open({ baudRate });
             
-            console.log('Selected serial port:' + bt_port.name);
-            console.log("baudRate:"+baudRate);
+            add_log('Selected serial port:' + bt_port.name);
+            add_log("baudRate:"+baudRate);
+            add_log("正在接收資料");
 
             document.querySelector('#bt_btn').src = "images/disconnect_bt.png";
 
@@ -35,7 +36,7 @@ async function init_bt() {
                         receive_bt_allPathData(value);
                         data = btAllPathData;
                         data = handel_bt_allPathData(data);
-                        if(data != null){
+                        if(data != null){                            
                             await draw_allPath(data);
                             bt_data_flag = 1;
                             const packet = new Uint8Array([0x23, 0x26]); // 要發送的封包資料
@@ -58,7 +59,6 @@ async function init_bt() {
                 }
             }
         } catch (error) {
-            console.error('Error opening serial port:' + error);
             alert('Error opening serial port:' + error + '\n' + "請檢查藍牙與Baund Rate是否正確");
         } finally {
             try {
@@ -136,10 +136,6 @@ function draw_allPath(cell){
     }
 }
 
-function sendAck(){
-
-}
-
 let btOffsetDate = '';
 let A5_flag = 0;    //0:有AA有55，1:有AA沒55
 function receive_bt_offsetData(value) {
@@ -205,8 +201,15 @@ async function draw_cell(cell){
     
     L.polyline(path, { color: 'green' }).addTo(map);
 
+    
+    if(sp_marker != null) sp_marker.remove();   //移除標註使用者座標
+    sp_marker = L.marker(cell.sp, { icon: sp_icon }).addTo(map); //新增標註使用者座標
+    
     if(yp_marker != null) yp_marker.remove();   //移除標註使用者座標
     yp_marker = L.marker(cell.yp, { icon: yp_icon }).addTo(map); //新增標註使用者座標
+
+    if(ep_marker != null) ep_marker.remove();   //移除標註使用者座標
+    ep_marker = L.marker(cell.ep, { icon: ep_icon }).addTo(map); //新增標註使用者座標
 
     path = null;
 }
@@ -223,7 +226,7 @@ function serial_monitor(cell){
                     +"EP:("+cell.ep.lat+","+cell.ep.lon+") , "
                     +"YP:("+cell.yp.lat+","+cell.yp.lon+") , "
                     +"Dist Offset:"+cell.dist_offset+" , "
-                    +"Cursor Offset:"+cell.cursor_offset+"\n" ;
+                    +"Cursor Offset:"+cell.cursor_offset+"\n";
 }
 
 function open_popup(){
