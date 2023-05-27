@@ -34,13 +34,18 @@ async function init_bt() {
                 switch(bt_data_flag){
                     case 0: //初始狀態，接收所有路線資料
                         receive_bt_allPathData(value);
-                        data = btAllPathData;
-                        data = handel_bt_allPathData(data);
-                        if(data != null){                            
-                            await draw_allPath(data);
-                            bt_data_flag = 1;
-                            const packet = new Uint8Array([0x23, 0x26]); // 要發送的封包資料
-                            await sendPacket(packet);
+                        
+                        if(allPathDataOk == true){
+                            console.log(btAllPathData);
+                            data = btAllPathData;
+                            data = handel_bt_allPathData(data);
+                            if(data != null){                            
+                                await draw_allPath(data);
+                                bt_data_flag = 1;
+                                const packet = new Uint8Array([0x23, 0x26]); // 要發送的封包資料
+                                await sendPacket(packet);
+                            }
+                            btAllPathData = "";
                         }
                         
                         break;
@@ -81,19 +86,33 @@ async function init_bt() {
 }
 
 let btAllPathData = "";
+let allPathDataOk = false;
 function receive_bt_allPathData(value){
     value = Array.from(new Uint8Array(value)).map((b) => b.toString(16).padStart(2, '0')).join(''); // 轉換為 16 進制字串並補零
-    let startIndex = value.indexOf("23"), startIndex2 = value.indexOf("24");
-    let endIndex = value.indexOf("25"), endIndex2 = value.indexOf("26");
+    btAllPathData += value;
 
-    if(startIndex != -1 && startIndex2 != -1 && endIndex != -1 && endIndex2 != -1){ //有頭有尾      
-        if(startIndex2 - startIndex == 2 && endIndex2 - endIndex == 2){ //確認起始與結束符號
-            //console.log(startIndex+","+startIndex2+","+endIndex+","+endIndex2);
-            btAllPathData = value;
-        }
-        else btAllPathData = "";
+    let hightStart = btAllPathData.indexOf('23'), lowStart = btAllPathData.indexOf('24'), hightEnd = btAllPathData.indexOf('25'), lowEnd = btAllPathData.indexOf('26'); 
+    let hightEndArray = new Array();
+
+
+    while (hightEnd !== -1) {
+        hightEndArray.push(hightEnd);
+        hightEnd = btAllPathData.indexOf('25', hightEnd + 1);
     }
-    else btAllPathData = "";
+
+    console.log(hightEndArray);
+
+    if(lowStart - hightStart == 2){
+        for(var i = 0; i < hightEndArray.length; i++){
+            if(btAllPathData.substring(hightEndArray[i], hightEndArray[i]+2) == '25' && btAllPathData.substring(hightEndArray[i] + 2, hightEndArray[i]+4) == '26'){
+                lowEnd = hightEndArray[i]+4;
+                
+            }
+        }
+        
+        btAllPathData = btAllPathData.substring(hightStart, lowEnd);
+        allPathDataOk = true;
+    }
 }
 
 function handel_bt_allPathData(value){
@@ -130,7 +149,20 @@ function draw_allPath(cell){
         path.push(cell[i].sp);
         path.push(cell[i].ep);
 
-        L.polyline(path, { color: 'blue' }).addTo(map);
+        let polyline = L.polyline(path, { color: 'blue' }).addTo(map);
+        var arrow = L.polylineDecorator(polyline, {
+            patterns: [
+                {
+                    offset: "100%",
+                    repeat: 0,
+                    symbol: L.Symbol.arrowHead({
+                    pixelSize: 12,
+                    polygon: false,
+                    pathOptions: { stroke: true, color: "blue" },
+                    }),
+                },
+            ],
+        }).addTo(map);
     
         path = null;
     }
@@ -199,17 +231,31 @@ async function draw_cell(cell){
     path.push(cell.ep);
     //console.log(path);
     
-    L.polyline(path, { color: 'green' }).addTo(map);
+    let polyline = L.polyline(path, { color: 'green' }).addTo(map);
+    // 添加箭頭樣式
+    var arrow = L.polylineDecorator(polyline, {
+        patterns: [
+            {
+                offset: "100%",
+                repeat: 0,
+                symbol: L.Symbol.arrowHead({
+                pixelSize: 12,
+                polygon: false,
+                pathOptions: { stroke: true, color: "green" },
+                }),
+            },
+        ],
+    }).addTo(map);
 
     
-    if(sp_marker != null) sp_marker.remove();   //移除標註使用者座標
-    sp_marker = L.marker(cell.sp, { icon: sp_icon }).addTo(map); //新增標註使用者座標
+    //if(sp_marker != null) sp_marker.remove();   //移除標註使用者座標
+    //sp_marker = L.marker(cell.sp, { icon: sp_icon }).addTo(map); //新增標註使用者座標
     
     if(yp_marker != null) yp_marker.remove();   //移除標註使用者座標
     yp_marker = L.marker(cell.yp, { icon: yp_icon }).addTo(map); //新增標註使用者座標
 
-    if(ep_marker != null) ep_marker.remove();   //移除標註使用者座標
-    ep_marker = L.marker(cell.ep, { icon: ep_icon }).addTo(map); //新增標註使用者座標
+    //if(ep_marker != null) ep_marker.remove();   //移除標註使用者座標
+    //ep_marker = L.marker(cell.ep, { icon: ep_icon }).addTo(map); //新增標註使用者座標
 
     path = null;
 }

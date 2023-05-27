@@ -38,7 +38,7 @@ void setup() {
 void loop() {
   switch(dataFlag){
     case 0:
-      BT.write(allPathData3Line, sizeof(allPathData3Line));//傳輸給藍牙
+      BT.write(allPathData4Line, sizeof(allPathData4Line));//傳輸給藍牙
       break;
     case 1:
       BT.write(offsetData[dataIndex], sizeof(offsetData[dataIndex]));//傳輸給藍牙
