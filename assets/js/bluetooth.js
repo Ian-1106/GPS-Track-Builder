@@ -34,7 +34,6 @@ async function init_bt() {
                 switch(bt_data_flag){
                     case 0: //初始狀態，接收所有路線資料
                         receive_bt_allPathData(value);
-                        
                         if(allPathDataOk == true){
                             console.log(btAllPathData);
                             data = btAllPathData;
@@ -42,10 +41,12 @@ async function init_bt() {
                             if(data != null){                            
                                 await draw_allPath(data);
                                 bt_data_flag = 1;
-                                const packet = new Uint8Array([0x23, 0x26]); // 要發送的封包資料
+                                let packet = new Uint8Array(new ArrayBuffer(2));
+                                packet[0] = 0x23;
+                                packet[1] = 0x26;
                                 await sendPacket(packet);
                             }
-                            btAllPathData = "";
+                            //btAllPathData = "";
                         }
                         
                         break;
@@ -231,6 +232,9 @@ async function draw_cell(cell){
     path.push(cell.ep);
     //console.log(path);
     
+    const temp = handel_bt_allPathData(btAllPathData);
+    await draw_allPath(temp);
+
     let polyline = L.polyline(path, { color: 'green' }).addTo(map);
     // 添加箭頭樣式
     var arrow = L.polylineDecorator(polyline, {
