@@ -51,6 +51,7 @@ let yp_marker = null;
 let ep_marker = null;
 let dist_offset = null;
 let cur_offset = null;
+let yp_marker_on_map = null;
 
 let drawItem;   //圖層
 

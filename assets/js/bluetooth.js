@@ -348,5 +348,6 @@ function draw_offset_data(){
             { offset: '100%', repeat: 0, symbol: L.Symbol.arrowHead({ pixelSize: 10, polygon: false, pathOptions: { stroke: true, color: 'green' } }) }
         ]
     }).addTo(map);
-    L.marker(yp_marker, { icon: yp_icon }).addTo(map); //標註使用者座標
+    yp_marker_on_map = null;
+    yp_marker_on_map = L.marker(yp_marker, { icon: yp_icon }).addTo(map); //標註使用者座標
 }
