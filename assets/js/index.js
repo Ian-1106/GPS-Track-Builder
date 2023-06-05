@@ -24,6 +24,16 @@ function shape_data_to_download(){
    shape_path_process();
 }
 
+function open_popup(){
+   let monitor = document.querySelector(".監看視窗");
+   let opacity = window.getComputedStyle(monitor).opacity;
+   if(opacity == 0){
+      monitor.style.opacity = 0.7;
+   }else if(opacity == 0.7){
+      monitor.style.opacity = 0;
+   }
+}
+
 function jj_download_log_file(){
    const element = document.createElement('a');
    const file = new Blob([JJ_log_file], { type: 'text/plain' });

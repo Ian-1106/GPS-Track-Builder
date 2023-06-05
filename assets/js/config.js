@@ -49,6 +49,8 @@ let ep_icon = L.icon({
 let sp_marker = null;
 let yp_marker = null;
 let ep_marker = null;
+let dist_offset = null;
+let cur_offset = null;
 
 let drawItem;   //圖層
 
@@ -64,6 +66,12 @@ let data_to_file = new Array(); //最終要下載的資料
 let bt_port = null;
 let bt_open_flag = false;
 let bt_data_flag = 0;//初始狀態
-//let bt_data_list = new Array(); //從藍牙接收到並整理過的資料
+let bt_data_receiving_flag = false;
+let bt_data_unit8array = null;
+
+let all_path_count = -1;    //所有路線總筆數
+let per_sep_btye_count = -1;    //依次寫入的byte數
+let all_path_datalist = new Array();
+let offset_data_size = -1;
 
 let JJ_log_file = "";

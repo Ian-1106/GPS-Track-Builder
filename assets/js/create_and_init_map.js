@@ -1,28 +1,38 @@
-function create_map(){
-  // *** 放置地圖
+// 创建地图
+function create_map() {
   let zoom = 18; // 0 - 18
-  let center = [25.0854061,121.5615012]; // 中心點座標
+  let center = [25.0854061, 121.5615012]; // 中心點座標
 
-  map = L.map(document.querySelector('#map'),{  //map基礎設定
-    center: [23.5, 121],  // 中心點
-    zoom: 18,  // 縮放層級
-    crs: L.CRS.EPSG3857,  // 座標系統
-  }).setView(center, zoom);
+  map = L.map(document.querySelector('#map'), {
+    center: center,
+    zoom: zoom,
+    crs: L.CRS.EPSG3857,
+  });
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap', // 商用時必須要有版權出處
-    zoomControl: true , //Show - + button
-    maxZoom: 18,  
-  }).addTo(map);  //新增底圖
+    attribution: '© OpenStreetMap',
+    zoomControl: true,
+    maxZoom: 18,
+  }).addTo(map);
 
-  drawItem = new L.FeatureGroup();  //初始化圖層
+  drawItem = new L.FeatureGroup();
   map.addLayer(drawItem);
 
-  map.on('draw:created', draw_created); //監聽繪圖事件
-  
-  get_user_location();    //取得使用者位置    【公司座標點: 23.4647148,120.4314508】
-  find_user_locate(); //定位使用者位置
-  create_draw_func_bar(); //建立繪圖工具(位於左上方)
+  map.on('draw:created', draw_created);
+
+  get_user_location();
+  find_user_locate();
+  create_draw_func_bar();
+
+  // 获取經緯度顯示的元素
+  var latLngDisplay = document.getElementById('經緯度顯示');
+
+  // 监听鼠标移动事件
+  map.on('mousemove', function (e) {
+    var lat = e.latlng.lat.toFixed(6);
+    var lng = e.latlng.lng.toFixed(6);
+    latLngDisplay.innerText = '經度: ' + lat + '\n  緯度: ' + lng;
+  });
 }
 
 //取得使用者座標
