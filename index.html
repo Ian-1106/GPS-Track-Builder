@@ -24,14 +24,12 @@
         <script src="assets/js/shape_path_process.js"></script>
         <script src="assets/js/download_files.js"></script>
         <script src="src/L.Control.Locate.js" ></script>
-
     </head>
 
     <body  onload="init();">
-
         <div class="地圖與監看視窗的容器">
             <div class="經緯度顯示的容器">
-                <label id="經緯度顯示">我是經緯度喔</label>
+                <label id="經緯度顯示"></label>
             </div>
             <div id="map"></div>
             <div class="監看視窗"><label class="監看視窗文字"></label></div><!---->
@@ -40,6 +38,12 @@
             <div class="frame">
                 <div class="兩個設定區塊的容器">
                     <div class="設定區的容器">
+                        <div id="mutiple_side_setting" class="setting">
+                            <strong><span style="font-size: 18px;">經緯度定位:</span></strong><br>
+                            <label>SP: </label><input id="sp_lat_input" type="text"></input><input id="sp_lon_input" type="text"></input><br>
+                            <label>EP: </label><input id="ep_lat_input" type="text"></input><input id="ep_lon_input" type="text"></input>
+                        </div>
+
                         <div id="mutiple_side_setting" class="setting">
                             <strong><span style="font-size: 18px;">線段路線設定:</span></strong><button class="set_btn" style="margin-left: 2%;" onclick="download_line_bin();">匯出</button>
                         </div>
@@ -78,6 +82,7 @@
                 <div class="frame2">
                     <div class="功能列">
                         <img class="dowload_btn" style="width: 30px;height: 30px;" src="images/download.png" title="下載路線資料" onclick="download_file();"></img>
+                        <img class="dowload_btn" style="width: 30px;height: 30px;" src="images/upload.png" title="燒錄到裝置" onclick="upload_to_device();"></img>
                         <img id="bt_btn" class="dowload_btn" style="width: 25px;height: 30px;" src="images/bt.png" title="連線藍牙" onclick="init_bt();"></img>
                         <select id="baund_rate_select" onchange="init_bt();">
                             <option>300</option>
@@ -95,7 +100,7 @@
                             <option>1843200</option>
                         </select>
                         <img class="dowload_btn" style="width: 40px;height: 30px;" src="images/monitor.png" title="監看視窗" onclick="open_popup();"></img>
-                        <!--<img class="dowload_btn" style="width: 40px;height: 30px;" src="images/download.png" title="JJ專用" onclick="jj_download_log_file();"></img>-->
+                        <img class="dowload_btn" style="width: 40px;height: 30px;" src="images/download.png" title="JJ專用" onclick="jj_download_log_file();"></img>
                     </div>
                     
                     <div class="log">

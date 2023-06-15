@@ -12,7 +12,7 @@ function create_map() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
     zoomControl: true,
-    maxZoom: 18,
+    maxZoom: 20,
   }).addTo(map);
 
   drawItem = new L.FeatureGroup();
@@ -31,7 +31,7 @@ function create_map() {
   map.on('mousemove', function (e) {
     var lat = e.latlng.lat.toFixed(6);
     var lng = e.latlng.lng.toFixed(6);
-    latLngDisplay.innerText = '經度: ' + lat + '\n  緯度: ' + lng;
+    latLngDisplay.innerText = 'Lat:\t' + lat + '  Lon:\t' + lng;
   });
 }
 

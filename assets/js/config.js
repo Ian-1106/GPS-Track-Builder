@@ -46,13 +46,6 @@ let ep_icon = L.icon({
     shadowAnchor: [12, 41]
 });
 
-let sp_marker = null;
-let yp_marker = null;
-let ep_marker = null;
-let dist_offset = null;
-let cur_offset = null;
-let yp_marker_on_map = null;
-
 let drawItem;   //圖層
 
 let path_type = null;
@@ -70,8 +63,28 @@ let bt_data_flag = 0;//初始狀態
 let bt_data_receiving_flag = false;
 let bt_data_unit8array = null;
 
+let yp_marker = null;
+let sp_marker = null;
+let ep_marker = null;
+let system_status = null;
+let speed = null;
+let dist_offset = null;
+let sep_dist = null;
+let sep_cursor = null;
+let ysp_dist = null;
+let ysp_cursor = null;
+let yep_dist = null;
+let yep_cursor = null;
+
+let yp_marker_on_map = null;
+
+let device_is_upload_mode = false;
+let sizeof_data_to_file = 0;
+let per_write_size_from_data_to_file = 0;
+let write_data_count_times = 0;
+
 let all_path_count = -1;    //所有路線總筆數
-let per_sep_btye_count = -1;    //依次寫入的byte數
+let per_sep_btye_count = -1;    //一次寫入的byte數
 let all_path_datalist = new Array();
 let offset_data_size = -1;
 

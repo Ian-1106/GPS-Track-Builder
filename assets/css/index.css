@@ -36,7 +36,7 @@ label{
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 10%;
+    width: 12%;
     padding: 1%;
     z-index: 6;
     background-color: #e6e6e6;
@@ -86,9 +86,9 @@ label{
 .frame{
     position: fixed;
     width: 99%;
-    margin-top: 33%;
+    margin-top: 37%;
     display:flex;
-    bottom:0;
+    bottom: 0%;
 }
 
 .frame2{
@@ -104,8 +104,7 @@ label{
     padding:1%;
     background-color: #dedede;
 	align-items: center;
-    border-width: 3px;
-    border-color: blue;
+    border: 1px solid white;
 }
 
 .set_btn{
