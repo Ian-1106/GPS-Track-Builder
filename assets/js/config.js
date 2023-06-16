@@ -77,6 +77,7 @@ let yep_dist = null;
 let yep_cursor = null;
 
 let yp_marker_on_map = null;
+let last_sep_line_to_draw = null;
 
 let device_is_upload_mode = false;
 let sizeof_data_to_file = 0;

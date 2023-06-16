@@ -45,7 +45,7 @@ async function init_bt() {
 								bt_data_flag_4_process();
 								break;
 							case 5:							//offset的資料
-								bt_data_flag_5_process();
+								await bt_data_flag_5_process();
 								serial_monitor();
 								break;
 							case 6:							//傳送進入燒錄模式請求
@@ -206,8 +206,9 @@ function bt_data_flag_1_process(){
 			packet[1] = 1;
 			send_packet(packet);
 			
-			add_log("預計接收完成" + all_path_datalist.length + "筆路線");
-			bt_data_flag = 2;
+			add_log("預計接收" + all_path_datalist.length + "筆路線");
+			if(all_path_datalist > 0) bt_data_flag = 2;
+			else bt_data_flag = 4;
 		}else{
 			let packet = new Uint8Array(new ArrayBuffer(2));
 			packet[0] = 3;
@@ -238,24 +239,27 @@ function bt_data_flag_2_process(){
                     let proc_value = new Uint8Array([temp[k], temp[k+1], temp[k+2], temp[k+3]]);
                     value.push((proc_value[0] << 24 | proc_value[1] << 16 | proc_value[2] << 8 | proc_value[3]) / 1000000);
                 }
+
+				if(value[0] != 0 && value[1] != 0 && value[2] != 0 && value[3] != 0){
+					all_path_datalist.push({
+						sp: {
+							lat: value[0],
+							lon: value[1]
+						},
+						ep: {
+							lat: value[2],
+							lon: value[3]
+						}
+					});
+					add_log("已接收" + all_path_datalist.length + "筆路線");
+				}
+
                 
-                all_path_datalist.push({
-                    sp: {
-                        lat: value[0],
-                        lon: value[1]
-                    },
-                    ep: {
-                        lat: value[2],
-                        lon: value[3]
-                    }
-                });
 			}
 			let packet = new Uint8Array(new ArrayBuffer(2));
             packet[0] = 3;
             packet[1] = 1;
             send_packet(packet);
-
-            add_log("已接收" + all_path_datalist.length + "筆路線");
 
             bt_data_unit8array = null;
             if(all_path_datalist.length >= all_path_count){
@@ -316,7 +320,7 @@ function bt_data_flag_4_process(){
 }
 
 //傳送offset的資料
-function bt_data_flag_5_process(){	
+async function bt_data_flag_5_process(){	
 	if(proc_function_code(49, 8)){
 		if(proc_checksum()){
 			let temp = new Array();
@@ -459,8 +463,8 @@ function bt_data_flag_11_process(){
 		if(write_data_count_times < data_to_file.length - 1){
 			write_data_count_times++;
 			bt_data_flag = 10;
-		}		
-	}else bt_data_flag = 12;
+		}else bt_data_flag = 12;		
+	}
 }
 
 //傳送寫入完成的指令
@@ -481,12 +485,13 @@ function bt_data_flag_12_process(){
 function bt_data_flag_13_process(){
 	if(proc_function_code(1, 1)){
 		bt_data_flag = 14;
+		add_log("燒錄完成，準備刷新頁面");
 	}else bt_data_flag = 13;
 }
 
 //傳送退出燒錄模式的指令
 function bt_data_flag_14_process(){
-	let packet = new Uint8Array(new ArrayBuffer(13));
+	let packet = new Uint8Array(new ArrayBuffer(6));
 	packet[0] = 8;
 	packet[1] = 0;
 	packet[2] = 49;
@@ -503,6 +508,8 @@ function bt_data_flag_15_process(){
 	if(proc_function_code(1, 1)){
 		bt_data_flag = 0;
 		device_is_upload_mode = false;
+
+		location = location;
 	}else bt_data_flag = 14;
 }
 
@@ -537,7 +544,7 @@ function serial_monitor(){
     }
 }
 
-function draw_all_path() {
+async function draw_all_path() {
     all_path_datalist.forEach((element, index) => {
         let path = [element.sp, element.ep];
 
@@ -551,7 +558,17 @@ function draw_all_path() {
 }
 
 function draw_offset_data(){
-	draw_all_path();
+	if(last_sep_line_to_draw == null){
+		last_sep_line_to_draw = [sp_marker, ep_marker];
+	}else{
+		let polyline = L.polyline(last_sep_line_to_draw, { color: 'blue' }).addTo(map);
+		let arrowHead = L.polylineDecorator(polyline, {
+			patterns: [
+				{ offset: '100%', repeat: 0, symbol: L.Symbol.arrowHead({ pixelSize: 10, polygon: false, pathOptions: { stroke: true, color: 'blue' } }) }
+			]
+		}).addTo(map);
+	}
+
     let path = [sp_marker, ep_marker];
     let polyline = L.polyline(path, { color: 'green' }).addTo(map);
     let arrowHead = L.polylineDecorator(polyline, {

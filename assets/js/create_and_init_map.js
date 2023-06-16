@@ -12,7 +12,8 @@ function create_map() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
     zoomControl: true,
-    maxZoom: 20,
+    maxZoom: 18,
+    maxNativeZoom: 18,
   }).addTo(map);
 
   drawItem = new L.FeatureGroup();
