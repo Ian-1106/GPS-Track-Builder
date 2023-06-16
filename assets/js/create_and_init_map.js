@@ -12,7 +12,7 @@ function create_map() {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap',
     zoomControl: true,
-    maxZoom: 18,
+    maxZoom: 20,
     maxNativeZoom: 18,
   }).addTo(map);
 
